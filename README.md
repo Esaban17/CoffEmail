@@ -1,24 +1,35 @@
 # CoffEmail
 
-Un cliente de correo electrónico simple desarrollado en Java con funcionalidades de gestión de usuarios.
+Sistema de registro de usuarios para correo electrónico, desarrollado en Java con arquitectura MVC.
 
 ## Descripción
 
-CoffEmail es una aplicación de escritorio que permite gestionar usuarios para un sistema de correo electrónico. Incluye funcionalidades de registro con encriptación de contraseñas y gestión de perfiles de usuario.
+CoffEmail es una aplicación de escritorio construida con Java Swing que permite registrar usuarios para un sistema de correo electrónico. La aplicación gestiona el registro completo de usuarios incluyendo encriptación de contraseñas, carga de fotografías de perfil y persistencia de datos en archivos de texto.
 
 ## Características
 
-- **Registro de Usuarios**: Sistema completo de registro con validación de datos
-- **Encriptación de Contraseñas**: Utiliza MD5 con salt para asegurar las contraseñas de los usuarios
-- **Gestión de Imágenes de Perfil**: Permite cargar y almacenar fotografías de perfil
-- **Selector de Fechas**: Interfaz gráfica para seleccionar fechas de nacimiento
-- **Almacenamiento de Datos**: Sistema de archivos para persistencia de información de usuarios
+- **Registro de Usuarios** — Formulario completo con validación de todos los campos obligatorios
+- **Encriptación de Contraseñas** — Hashing MD5 con salt aleatorio generado mediante `SHA1PRNG` y `SecureRandom`
+- **Gestión de Imágenes de Perfil** — Selector de archivos para cargar fotos, que se copian y renombran automáticamente al directorio del sistema
+- **Selector de Fechas** — Componente `DateChooser` integrado para selección de fecha de nacimiento
+- **Roles de Usuario** — El primer usuario registrado se asigna automáticamente como administrador
+- **Persistencia en Archivos** — Almacenamiento en texto plano con formato delimitado por `|`
+
+## Arquitectura
+
+El proyecto sigue el patrón **Modelo-Vista-Controlador (MVC)**:
+
+| Capa | Clase | Responsabilidad |
+|------|-------|-----------------|
+| **Modelo** | `User.java` | Entidad de datos con 10 atributos (usuario, nombre, apellido, contraseña, rol, fecha de nacimiento, email, teléfono, foto, estado) |
+| **Vista** | `RegisterView.java` | Interfaz gráfica Swing con formulario de registro, validación de campos y diálogos de confirmación |
+| **Controlador** | `UserController.java` | Lógica de negocio: encriptación, copia de imágenes y escritura de archivos |
 
 ## Requisitos
 
 - Java Development Kit (JDK) 1.8 o superior
 - Apache Maven
-- Sistema operativo: Windows, Linux o macOS
+- Sistema operativo: Windows (rutas de almacenamiento configuradas para `C:/MEIA/`)
 
 ## Instalación
 
@@ -35,17 +46,24 @@ mvn clean install
 
 ## Uso
 
-Para ejecutar la aplicación, utiliza el siguiente comando:
+Ejecuta la aplicación con:
 
 ```bash
 mvn exec:java -Dexec.mainClass="com.coffemail.views.RegisterView"
 ```
 
-Alternativamente, puedes ejecutar el archivo JAR generado:
+O mediante el JAR generado:
 
 ```bash
 java -jar target/CoffEmail-1.0-SNAPSHOT.jar
 ```
+
+### Flujo de registro
+
+1. Completa todos los campos del formulario (usuario, nombre, apellido, contraseña, email, teléfono, fecha de nacimiento)
+2. Selecciona una fotografía de perfil con el botón **Seleccionar**
+3. Haz clic en **Registrar** para guardar el usuario
+4. La contraseña se encripta automáticamente y la foto se copia al directorio del sistema
 
 ## Estructura del Proyecto
 
@@ -56,73 +74,47 @@ CoffEmail/
 │       └── java/
 │           └── com/
 │               └── coffemail/
-│                   ├── controllers/    # Controladores de lógica de negocio
-│                   ├── models/         # Modelos de datos
-│                   └── views/          # Interfaces gráficas
-├── lib/                                # Bibliotecas externas
-├── pom.xml                             # Configuración de Maven
-└── README.md                           # Este archivo
+│                   ├── controllers/
+│                   │   └── UserController.java   # Encriptación, I/O de archivos
+│                   ├── models/
+│                   │   └── User.java             # Entidad de usuario
+│                   └── views/
+│                       └── RegisterView.java     # Interfaz gráfica (punto de entrada)
+├── lib/                                          # Dependencia DateChooser (JAR local)
+├── pom.xml                                       # Configuración de Maven
+└── README.md
 ```
-
-## Funcionalidades de Usuario
-
-El modelo de usuario incluye los siguientes campos:
-
-- Usuario (nombre de usuario)
-- Nombre
-- Apellido
-- Contraseña (encriptada)
-- Rol (permisos de usuario)
-- Fecha de nacimiento
-- Correo electrónico
-- Teléfono
-- Fotografía de perfil
-- Estado (activo/inactivo)
 
 ## Almacenamiento de Datos
 
-Los datos de usuarios se almacenan en archivos de texto plano en la ruta:
-- **Windows**: `C:/MEIA/usuario.txt`
-- **Imágenes**: `C:/MEIA/images/`
+| Recurso | Ruta |
+|---------|------|
+| Datos de usuarios | `C:/MEIA/usuario.txt` |
+| Imágenes de perfil | `C:/MEIA/images/` |
 
-El formato de almacenamiento utiliza el delimitador `|` para separar los campos.
+- El archivo de usuarios se crea automáticamente con encabezados en el primer registro
+- Cada registro se almacena en una línea con campos separados por `|`
+- Las fotos se renombran al nombre de usuario conservando la extensión original
 
-## Tecnologías Utilizadas
+## Tecnologías
 
-- **Java 1.8**: Lenguaje de programación principal
-- **Maven**: Gestión de dependencias y construcción del proyecto
-- **Swing**: Framework para la interfaz gráfica de usuario
-- **DateChooser**: Componente para selección de fechas
-
-## Seguridad
-
-El proyecto implementa:
-- Encriptación de contraseñas usando MD5 con salt generado mediante `SecureRandom`
-- Validación de datos de entrada
-- Gestión segura de archivos
+- **Java 1.8** — Lenguaje principal
+- **Maven** — Gestión de dependencias y build
+- **Swing** — Framework de interfaz gráfica
+- **DateChooser** — Componente de selección de fechas (biblioteca local en `lib/`)
 
 ## Autor
 
-**Estuardo Sabán** - [@Esaban17](https://github.com/Esaban17)
+**Estuardo Sabán** — [@Esaban17](https://github.com/Esaban17)
 
 ## Contribuciones
 
-Las contribuciones son bienvenidas. Por favor:
-
 1. Haz fork del proyecto
-2. Crea una rama para tu característica (`git checkout -b feature/nueva-caracteristica`)
-3. Realiza commit de tus cambios (`git commit -m 'Agrega nueva característica'`)
-4. Sube los cambios a tu rama (`git push origin feature/nueva-caracteristica`)
+2. Crea una rama (`git checkout -b feature/nueva-caracteristica`)
+3. Haz commit de tus cambios (`git commit -m 'Agrega nueva característica'`)
+4. Push a tu rama (`git push origin feature/nueva-caracteristica`)
 5. Abre un Pull Request
 
 ## Licencia
 
-Este proyecto está en desarrollo. Por favor contacta al autor para información sobre licencias.
-
-## Notas de Desarrollo
-
-Este proyecto utiliza NetBeans como IDE de desarrollo y contiene configuraciones específicas para dicho entorno.
-
----
-
-**Nota**: Este es un proyecto en desarrollo. Algunas funcionalidades pueden estar en proceso de implementación.
+Este proyecto está en desarrollo. Contacta al autor para información sobre licencias.
