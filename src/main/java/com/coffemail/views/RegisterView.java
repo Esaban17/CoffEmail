@@ -1,28 +1,36 @@
 package com.coffemail.views;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Toolkit;
-import com.coffemail.controllers.UserController;
 import com.coffemail.models.User;
+import com.coffemail.services.DuplicateUsernameException;
+import com.coffemail.services.RegistrationValidator;
+import com.coffemail.services.UserService;
+import java.awt.Color;
 import java.io.File;
-import java.text.SimpleDateFormat;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.SwingWorker;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
+ * Formulario de registro de usuarios.
  *
  * @author Estuardo Sabán
  */
 public class RegisterView extends javax.swing.JFrame {
 
-    UserController controller = new UserController();
+    private static final long serialVersionUID = 1L;
+
+    private final transient UserService userService = new UserService();
 
     public RegisterView() {
         initComponents();
         getContentPane().setBackground(Color.DARK_GRAY);
-        Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-        this.setLocation(dim.width / 2 - this.getSize().width / 2, dim.height / 2 - this.getSize().height / 2);
+        setLocationRelativeTo(null);
     }
 
     @SuppressWarnings("unchecked")
@@ -37,7 +45,9 @@ public class RegisterView extends javax.swing.JFrame {
         jLabel4 = new javax.swing.JLabel();
         jLabel5 = new javax.swing.JLabel();
         txtLastName = new javax.swing.JTextField();
-        txtPassword = new javax.swing.JTextField();
+        txtPassword = new javax.swing.JPasswordField();
+        txtPasswordConfirm = new javax.swing.JPasswordField();
+        jLabel10 = new javax.swing.JLabel();
         jLabel6 = new javax.swing.JLabel();
         txtEmail = new javax.swing.JTextField();
         jLabel7 = new javax.swing.JLabel();
@@ -55,6 +65,7 @@ public class RegisterView extends javax.swing.JFrame {
         dcBirthDate.setTextRefernce(txtBirthDate);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("CoffEmail - Registro");
 
         jLabel1.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
         jLabel1.setForeground(new java.awt.Color(255, 255, 255));
@@ -75,6 +86,10 @@ public class RegisterView extends javax.swing.JFrame {
         jLabel5.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
         jLabel5.setForeground(new java.awt.Color(255, 255, 255));
         jLabel5.setText("Password");
+
+        jLabel10.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
+        jLabel10.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel10.setText("Confirmar Password");
 
         jLabel6.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
         jLabel6.setForeground(new java.awt.Color(255, 255, 255));
@@ -126,7 +141,9 @@ public class RegisterView extends javax.swing.JFrame {
                     .addComponent(txtLastName, javax.swing.GroupLayout.DEFAULT_SIZE, 275, Short.MAX_VALUE)
                     .addComponent(txtName)
                     .addComponent(txtUser)
-                    .addComponent(txtPassword))
+                    .addComponent(txtPassword)
+                    .addComponent(jLabel10)
+                    .addComponent(txtPasswordConfirm))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 64, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
@@ -194,6 +211,10 @@ public class RegisterView extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnUpload)
                 .addGap(18, 18, 18)
+                .addComponent(jLabel10)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(txtPasswordConfirm, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
                 .addComponent(btnRegister, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(36, Short.MAX_VALUE))
         );
@@ -201,80 +222,108 @@ public class RegisterView extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    public boolean TxtValidation() {
-        if (!txtUser.getText().equals("") && !txtName.getText().equals("") && !txtLastName.getText().equals("")
-                && !txtEmail.getText().equals("") && !txtPassword.getText().equals("") && !txtPhone.getText().equals("")
-                && !txtBirthDate.getText().equals("") && !txtPathPhoto.getText().equals("")) {
-            return true;
+    private void btnRegisterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRegisterActionPerformed
+        char[] password = txtPassword.getPassword();
+        char[] passwordConfirm = txtPasswordConfirm.getPassword();
+
+        List<String> errors = RegistrationValidator.validate(
+                txtUser.getText(), txtName.getText(), txtLastName.getText(), txtEmail.getText(),
+                txtPhone.getText(), txtBirthDate.getText(), txtPathPhoto.getText(),
+                password, passwordConfirm);
+        Arrays.fill(passwordConfirm, '\0');
+
+        if (!errors.isEmpty()) {
+            Arrays.fill(password, '\0');
+            JOptionPane.showMessageDialog(this,
+                    "Corrija lo siguiente:\n\n• " + String.join("\n• ", errors),
+                    "Datos incompletos", JOptionPane.WARNING_MESSAGE);
+            return;
         }
-        return false;
+
+        User user = new User();
+        user.setUsername(txtUser.getText().trim());
+        user.setName(txtName.getText().trim());
+        user.setLastName(txtLastName.getText().trim());
+        user.setEmail(txtEmail.getText().trim());
+        user.setPhone(txtPhone.getText().trim());
+        user.setBirthDate(RegistrationValidator.parseBirthDate(txtBirthDate.getText()).orElseThrow());
+        Path photo = new File(txtPathPhoto.getText().trim()).toPath();
+
+        register(user, password, photo);
+    }//GEN-LAST:event_btnRegisterActionPerformed
+
+    /**
+     * Ejecuta el registro fuera del hilo de eventos.
+     *
+     * <p>Derivar la contraseña con PBKDF2 es intencionalmente lento (cientos de
+     * miles de iteraciones) y además hay que leer y copiar la imagen: hacerlo en
+     * el hilo de Swing congelaría la ventana.
+     */
+    private void register(User user, char[] password, Path photo) {
+        btnRegister.setEnabled(false);
+        new SwingWorker<User, Void>() {
+            @Override
+            protected User doInBackground() throws Exception {
+                return userService.register(user, password, photo);
+            }
+
+            @Override
+            protected void done() {
+                btnRegister.setEnabled(true);
+                try {
+                    get();
+                    JOptionPane.showMessageDialog(RegisterView.this,
+                            "Usuario creado con éxito", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                    clearInputs();
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                } catch (ExecutionException ex) {
+                    showFailure(ex.getCause());
+                }
+            }
+        }.execute();
     }
 
-
-    private void btnRegisterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRegisterActionPerformed
-        if (TxtValidation()) {
-            String path = "C:/MEIA/usuario.txt";
-            File file = new File(path);
-            User user = new User();
-            SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
-
-            user.setUser(txtUser.getText());
-            user.setName(txtName.getText());
-            user.setLastName(txtLastName.getText());
-            user.setEmail(txtEmail.getText());
-            user.setPassword(txtPassword.getText());
-
-            if (file.exists() && !file.isDirectory()) {
-                user.setRole(false);
-            } else {
-                user.setRole(true);
-            }
-            try {
-                user.setBirthDate(sdf.parse(txtBirthDate.getText()));
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(null, "No se pudo parsear la fecha");
-            }
-
-            user.setPhone(Integer.parseInt(txtPhone.getText()));
-            user.setPathPhoto(txtPathPhoto.getText());
-
-            if (controller.WriteUser(user)) {
-                JOptionPane.showMessageDialog(null, "Usuario creado con éxito", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-                ClearInputs();
-            } else {
-                JOptionPane.showMessageDialog(null, "Error al crear el Usuario", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        }else{
-            JOptionPane.showMessageDialog(null, "Faltan campos por llenar", "Información", JOptionPane.INFORMATION_MESSAGE);          
+    private void showFailure(Throwable cause) {
+        if (cause instanceof DuplicateUsernameException || cause instanceof IllegalArgumentException) {
+            // Errores que el usuario puede corregir: se muestran tal cual.
+            JOptionPane.showMessageDialog(this, cause.getMessage(),
+                    "No se pudo registrar", JOptionPane.WARNING_MESSAGE);
+        } else if (cause instanceof IOException) {
+            JOptionPane.showMessageDialog(this,
+                    "No se pudo guardar el usuario: " + cause.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(this,
+                    "Error inesperado al crear el usuario.", "Error", JOptionPane.ERROR_MESSAGE);
         }
-    }//GEN-LAST:event_btnRegisterActionPerformed
+    }
 
     private void btnUploadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUploadActionPerformed
         JFileChooser dialog = new JFileChooser();
+        dialog.setAcceptAllFileFilterUsed(false);
+        dialog.setFileFilter(new FileNameExtensionFilter(
+                "Imágenes (png, jpg, jpeg, gif, bmp)", "png", "jpg", "jpeg", "gif", "bmp"));
 
-        File file;
-        String path;
-        int value = dialog.showOpenDialog(this);
-        if (value == JFileChooser.APPROVE_OPTION) {
-            file = dialog.getSelectedFile();
-            path = file.getPath();
-
-            txtPathPhoto.setText(path);
+        if (dialog.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            txtPathPhoto.setText(dialog.getSelectedFile().getPath());
         }
     }//GEN-LAST:event_btnUploadActionPerformed
 
-    private void ClearInputs() {
+    private void clearInputs() {
         txtUser.setText("");
         txtName.setText("");
         txtLastName.setText("");
         txtEmail.setText("");
         txtPassword.setText("");
+        txtPasswordConfirm.setText("");
         txtPhone.setText("");
+        txtBirthDate.setText("");
         txtPathPhoto.setText("");
     }
 
     /**
-     * @param args the command line arguments
+     * @param args argumentos de línea de comandos (no se usan)
      */
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
@@ -289,24 +338,15 @@ public class RegisterView extends javax.swing.JFrame {
                     break;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(RegisterView.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(RegisterView.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(RegisterView.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(RegisterView.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+                | javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(RegisterView.class.getName())
+                    .log(java.util.logging.Level.WARNING, "No se pudo aplicar el look and feel Nimbus", ex);
         }
-        //</editor-fold>
         //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new RegisterView().setVisible(true);
-            }
-        });
+        java.awt.EventQueue.invokeLater(() -> new RegisterView().setVisible(true));
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -315,6 +355,7 @@ public class RegisterView extends javax.swing.JFrame {
     private javax.swing.JButton btnUpload;
     private cambodia.raven.DateChooser dcBirthDate;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -327,7 +368,8 @@ public class RegisterView extends javax.swing.JFrame {
     private javax.swing.JTextField txtEmail;
     private javax.swing.JTextField txtLastName;
     private javax.swing.JTextField txtName;
-    private javax.swing.JTextField txtPassword;
+    private javax.swing.JPasswordField txtPassword;
+    private javax.swing.JPasswordField txtPasswordConfirm;
     private javax.swing.JTextField txtPathPhoto;
     private javax.swing.JTextField txtPhone;
     private javax.swing.JTextField txtUser;

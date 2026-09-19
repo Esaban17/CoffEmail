@@ -1,3 +1,11 @@
-C:\Users\DELL\Documents\NetBeansProjects\CoffEmail\src\main\java\com\coffemail\controllers\UserController.java
-C:\Users\DELL\Documents\NetBeansProjects\CoffEmail\src\main\java\com\coffemail\models\User.java
-C:\Users\DELL\Documents\NetBeansProjects\CoffEmail\src\main\java\com\coffemail\views\RegisterView.java
+/home/user/CoffEmail/src/main/java/com/coffemail/models/Role.java
+/home/user/CoffEmail/src/main/java/com/coffemail/models/User.java
+/home/user/CoffEmail/src/main/java/com/coffemail/security/PasswordHasher.java
+/home/user/CoffEmail/src/main/java/com/coffemail/services/DuplicateUsernameException.java
+/home/user/CoffEmail/src/main/java/com/coffemail/services/RegistrationValidator.java
+/home/user/CoffEmail/src/main/java/com/coffemail/services/UserService.java
+/home/user/CoffEmail/src/main/java/com/coffemail/storage/AppPaths.java
+/home/user/CoffEmail/src/main/java/com/coffemail/storage/DelimitedRecord.java
+/home/user/CoffEmail/src/main/java/com/coffemail/storage/PhotoStore.java
+/home/user/CoffEmail/src/main/java/com/coffemail/storage/UserRepository.java
+/home/user/CoffEmail/src/main/java/com/coffemail/views/RegisterView.java

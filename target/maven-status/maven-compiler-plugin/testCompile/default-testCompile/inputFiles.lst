@@ -1,0 +1,7 @@
+/home/user/CoffEmail/src/test/java/com/coffemail/security/PasswordHasherTest.java
+/home/user/CoffEmail/src/test/java/com/coffemail/services/RegistrationValidatorTest.java
+/home/user/CoffEmail/src/test/java/com/coffemail/services/UserServiceTest.java
+/home/user/CoffEmail/src/test/java/com/coffemail/storage/AppPathsTest.java
+/home/user/CoffEmail/src/test/java/com/coffemail/storage/DelimitedRecordTest.java
+/home/user/CoffEmail/src/test/java/com/coffemail/storage/PhotoStoreTest.java
+/home/user/CoffEmail/src/test/java/com/coffemail/storage/UserRepositoryTest.java

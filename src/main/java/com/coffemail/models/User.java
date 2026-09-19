@@ -1,44 +1,55 @@
 package com.coffemail.models;
 
-import java.util.*;
+import java.time.LocalDate;
+import java.util.Objects;
+
 /**
+ * Datos de un usuario registrado.
+ *
+ * <p>Esta clase nunca guarda la contraseña en claro: {@link #getPasswordHash()}
+ * contiene el hash autocontenido producido por
+ * {@code com.coffemail.security.PasswordHasher}, que ya incluye el salt.
  *
  * @author Estuardo Sabán
  */
 public class User {
-    String user;
-    String name;
-    String lastName;
-    String password;
-    boolean role;
-    Date birthDate;
-    String email;
-    int phone;
-    String pathPhoto;
-    boolean status;
-    
+
+    private String username;
+    private String name;
+    private String lastName;
+    private String passwordHash;
+    private Role role;
+    private LocalDate birthDate;
+    private String email;
+    private String phone;
+    private String photoPath;
+    private boolean active;
+
     public User() {
+        this.role = Role.USER;
+        this.active = true;
     }
-    
-    public User(String user, String name, String lastName, String password, boolean role, Date birthDate, String email, int phone, String pathPhoto, boolean status) {
-        this.user = user;
+
+    public User(String username, String name, String lastName, String passwordHash, Role role,
+                LocalDate birthDate, String email, String phone, String photoPath, boolean active) {
+        this.username = username;
         this.name = name;
         this.lastName = lastName;
-        this.password = password;
-        this.role = role;
+        this.passwordHash = passwordHash;
+        this.role = Objects.requireNonNullElse(role, Role.USER);
         this.birthDate = birthDate;
         this.email = email;
         this.phone = phone;
-        this.pathPhoto = pathPhoto;
-        this.status = status;
-    }
-    
-    public String getUser() {
-        return user;
+        this.photoPath = photoPath;
+        this.active = active;
     }
 
-    public void setUser(String user) {
-        this.user = user;
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getName() {
@@ -57,27 +68,27 @@ public class User {
         this.lastName = lastName;
     }
 
-    public String getPassword() {
-        return password;
+    public String getPasswordHash() {
+        return passwordHash;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 
-    public boolean getRole() {
+    public Role getRole() {
         return role;
     }
 
-    public void setRole(boolean role) {
-        this.role = role;
+    public void setRole(Role role) {
+        this.role = Objects.requireNonNullElse(role, Role.USER);
     }
 
-    public Date getBirthDate() {
+    public LocalDate getBirthDate() {
         return birthDate;
     }
 
-    public void setBirthDate(Date birthDate) {
+    public void setBirthDate(LocalDate birthDate) {
         this.birthDate = birthDate;
     }
 
@@ -89,27 +100,36 @@ public class User {
         this.email = email;
     }
 
-    public int getPhone() {
+    /**
+     * @return el teléfono como texto: un {@code int} desbordaba con código de
+     *         país y eliminaba los ceros a la izquierda
+     */
+    public String getPhone() {
         return phone;
     }
 
-    public void setPhone(int phone) {
+    public void setPhone(String phone) {
         this.phone = phone;
     }
 
-    public String getPathPhoto() {
-        return pathPhoto;
+    public String getPhotoPath() {
+        return photoPath;
     }
 
-    public void setPathPhoto(String pathPhoto) {
-        this.pathPhoto = pathPhoto;
+    public void setPhotoPath(String photoPath) {
+        this.photoPath = photoPath;
     }
 
-    public boolean getStatus() {
-        return status;
+    public boolean isActive() {
+        return active;
     }
 
-    public void setStatus(boolean status) {
-        this.status = status;
-    } 
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    @Override
+    public String toString() {
+        return "User{username=" + username + ", email=" + email + ", role=" + role + "}";
+    }
 }
