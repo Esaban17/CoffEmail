@@ -1,0 +1,29 @@
+# Build output
+target/
+build/
+out/
+*.class
+
+# NetBeans (nbactions.xml sí se versiona; las variantes por usuario no)
+nbproject/private/
+nbactions-*.xml
+.nb-gradle/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Eclipse / VS Code
+.classpath
+.project
+.settings/
+.vscode/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
